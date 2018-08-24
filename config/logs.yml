@@ -13,10 +13,10 @@ time_key: time
 caller_key: caller
 
 # encoding of log, just is json or console
-encoding: json
+encoding: console
 # Filename is the file to write logs to.  Backup log files will be retained
 # in the same directory.
-file_name: "logs/test.log"
+file_name: logs/test.log
 # MaxSize is the maximum size in megabytes of the log file before it gets
 # rotated. It defaults to 100 megabytes.
 max_size: 1

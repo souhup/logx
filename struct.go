@@ -144,55 +144,54 @@ func (l *Logger) Show(value interface{}){
 // Debug uses fmt.Sprint to construct and logs a message.
 // If value is struct, it will be converted to JSON.
 func (l *Logger) Debug(v interface{}) {
-	genPrint(l.sugar.Debugw, v)
+	generate(l.sugar.Debugw, v)
 }
 
 // Debugf uses fmt.Sprintf to log a templated message.
 func (l *Logger) Debugf(format string, params ...interface{}) {
-	genPrintf(l.sugar.Debugw, format, params...)
+	generate(l.sugar.Debugw, format, params...)
 }
 
 // Info uses fmt.Sprint to construct and log a message.
 // If value is struct, it will be converted to JSON.
 func (l *Logger) Info(v interface{}) {
-	genPrint(l.sugar.Infow, v)
+	generate(l.sugar.Infow, v)
 }
 
 // Infof uses fmt.Sprintf to log a templated message.
 func (l *Logger) Infof(format string, params ...interface{}) {
-	genPrintf(l.sugar.Infow, format, params...)
+	generate(l.sugar.Infow, format, params...)
 }
 
 // Warn uses fmt.Sprint to construct and log a message.
 // If value is struct, it will be converted to JSON.
 func (l *Logger) Warn(v interface{}) {
-	genPrint(l.sugar.Warnw, v)
+	generate(l.sugar.Warnw, v)
 }
 
 // Warnf uses fmt.Sprintf to log a templated message.
 func (l *Logger) Warnf(format string, params ...interface{}) {
-	genPrintf(l.sugar.Warnw, format, params...)
+	generate(l.sugar.Warnw, format, params...)
 }
 
 // Error uses fmt.Sprint to construct and log a message.
 // If value is struct, it will be converted to JSON.
 func (l *Logger) Error(v interface{}) {
-	genPrint(l.sugar.Errorw, v)
+	generate(l.sugar.Errorw, v)
 }
 
 // Errorf uses fmt.Sprintf to log a templated message.
 func (l *Logger) Errorf(format string, params ...interface{}) {
-	genPrintf(l.sugar.Errorw, format, params...)
+	generate(l.sugar.Errorw, format, params...)
 }
 
-func genPrint(fun func(string, ...interface{}), value interface{}) {
-	msg := fmt.Sprintf("%+v", value)
-	fun(msg, getField()...)
-	return
-}
-
-func genPrintf(fun func(string, ...interface{}), format string, params ...interface{}) {
-	msg := fmt.Sprintf(format, params...)
+func generate(fun func(string, ...interface{}), format interface{}, params ...interface{}) {
+	var msg string
+	if len(params) > 0 {
+		msg = fmt.Sprintf(format.(string), params...)
+	} else {
+		msg = fmt.Sprintf("%+v", format)
+	}
 	fun(msg, getField()...)
 	return
 }
