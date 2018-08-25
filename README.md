@@ -1,23 +1,10 @@
 ## Logx
 
-powerful and simple logger for golang.
+powerful and simple logger for golang, and help you identify different goroutine automatically.
 
 ## Installation
 
 `go get -u github.com/souhup/logx`
-
-Note that logs need a method to get goroutine id.
-
-My suggestion is modifying source code. 
-
-You can add the following method to runtime/proc.go, and then compile source code.
-
-```go
-func Goid() int64 {
-    _g_ := getg()
-    return _g_.goid
-}
-```
 
 ## Quick Start
 
@@ -28,51 +15,66 @@ You can use it directly.
 import "github.com/souhup/logx"
 
 func main() {
-	logx.X.Debug("hi")
-	logx.X.Debugf("%s", "hello")
+	logx.X.Debug("hello")
+	logx.X.Debugf("%s", "world")
 }
 ```
 
-```json
-{"level":"DEBUG","time":"2018-08-23 15:49:35","caller":"example/main.go:6","msg":"hi"}
-{"level":"DEBUG","time":"2018-08-23 15:49:35","caller":"example/main.go:7","msg":"hello"}
+
+```
+018-08-25 08:47:33	DEBUG	igo/t5.go:5	hello
+2018-08-25 08:47:33	DEBUG	igo/t5.go:6	world
 ```
 
 Key-value pairs is Ok.
 
+Note that the default mode is **simple**, it will ignore the keys. if you want 
+show them, you can use **console** or **json** in configuration file.
+
 ```go
 func main() {
-	logx.X.With("Years", 1, "Name", "souhup").Debug("hi")
+	logx.X.With("Method", "Get", "DeviceID", "aptx4896").Debug("authenticate")
 }
 ```
 
-```json
-{"level":"DEBUG","time":"2018-08-23 15:53:12","caller":"example/main.go:9","msg":"hi","Years":1,"Name":"souhup"}
+```
+2018-08-25 08:48:40	DEBUG	Get	aptx4896	igo/t5.go:5	authenticate
 ```
 
 More useful function is that, it can cache entry in every Goroutine.
+
 ```go
-func TestLogger_Add(t *testing.T) {
-	group := sync.WaitGroup{}
-	group.Add(1)
-	go func() {
-		X.Add("foo1", 1)
-		X.Debug("test Add 1")
-		group.Done()
-	}()
-	group.Add(1)
-	go func() {
-		X.Add("foo2", 2)
-		X.Debug("test Add 2")
-		group.Done()
-	}()
-	group.Wait()
+func main() {
+	rand.Seed(time.Now().UnixNano())
+	go business()
+	go business()
+	time.Sleep(time.Second)
+}
+
+func business() {
+	// clean goroutine cache when you destroy a goroutine.
+	defer logx.X.Clean()
+	logx.X.Add("trace_id", rand.Int())
+	logx.X.Debug("authenticate")
+	logx.X.Debug("done")
 }
 ```
 
 ```json
-{"level":"DEBUG","time":"2018-08-23 16:03:25","caller":"example/main.go:19","msg":"test Add 2","foo2":2}
-{"level":"DEBUG","time":"2018-08-23 16:03:25","caller":"example/main.go:13","msg":"test Add 1","foo1":1}
+func main() {
+	rand.Seed(time.Now().UnixNano())
+	go business()
+	go business()
+	time.Sleep(time.Second)
+}
+
+func business() {
+	// clean goroutine cache when you destroy a goroutine.
+	defer logx.X.Clean()
+	logx.X.Add("trace_id", rand.Int())
+	logx.X.Debug("authenticate")
+	logx.X.Debug("done")
+}
 ```
 
 ### Init

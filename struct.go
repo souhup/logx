@@ -26,6 +26,7 @@ import (
 	"runtime"
 	"sync"
 	"encoding/json"
+	goid2 "github.com/souhup/logx/goid"
 )
 
 // X is a instance of Logger, and it will be initialized when logx is imported.
@@ -197,7 +198,7 @@ func generate(fun func(string, ...interface{}), format interface{}, params ...in
 }
 
 func getField() []interface{} {
-	goid := runtime.Goid()
+	goid := goid2.GetGoid()
 	value, _ := field.LoadOrStore(goid, make([]interface{}, 0))
 	return value.([]interface{})
 }

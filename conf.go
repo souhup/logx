@@ -50,8 +50,10 @@ func GetLoggerByConf(config *Config) (logger *Logger, err error) {
 		encoder = zapcore.NewJSONEncoder(proConf)
 	} else if config.Encoding == "console" {
 		encoder = zapcore.NewConsoleEncoder(proConf)
+	} else if config.Encoding == "simple" {
+		encoder = zapcore.NewSimpleEncoder(proConf)
 	} else {
-		err = errors.New("encoding must be one of the json or console")
+		err = errors.New("encoding must be one of the json, console or simple")
 		fmt.Fprintln(os.Stderr, err.Error())
 		return
 	}
@@ -68,7 +70,6 @@ func GetLoggerByConf(config *Config) (logger *Logger, err error) {
 	if config.Filename == "" {
 		output = os.Stdout
 	}
-
 
 	newCore := zapcore.NewCore(encoder, output, zap.NewAtomicLevelAt(zapcore.Level(config.Level)))
 	opts := []zap.Option{zap.ErrorOutput(zapWriter)}
