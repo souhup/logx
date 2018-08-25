@@ -60,21 +60,11 @@ func business() {
 }
 ```
 
-```json
-func main() {
-	rand.Seed(time.Now().UnixNano())
-	go business()
-	go business()
-	time.Sleep(time.Second)
-}
-
-func business() {
-	// clean goroutine cache when you destroy a goroutine.
-	defer logx.X.Clean()
-	logx.X.Add("trace_id", rand.Int())
-	logx.X.Debug("authenticate")
-	logx.X.Debug("done")
-}
+```
+2018-08-25 09:22:16	DEBUG	1043844348288062735	igo/t5.go:20	authenticate
+2018-08-25 09:22:16	DEBUG	1043844348288062735	igo/t5.go:21	done
+2018-08-25 09:22:16	DEBUG	3733733451024920812	igo/t5.go:20	authenticate
+2018-08-25 09:22:16	DEBUG	3733733451024920812	igo/t5.go:21	done
 ```
 
 ### Init
