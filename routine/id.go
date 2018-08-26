@@ -13,6 +13,6 @@
 // permissions and limitations under the License. See the AUTHORS file
 // for names of contributors.
 
-package goid
+package routine
 
-func GetGoid() int64
+func GetId() int64

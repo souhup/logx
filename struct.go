@@ -21,12 +21,11 @@
 package logx
 
 import (
-	"fmt"
-	"go.uber.org/zap"
-	"runtime"
-	"sync"
 	"encoding/json"
-	goid2 "github.com/souhup/logx/goid"
+	"fmt"
+	"github.com/souhup/logx/routine"
+	"go.uber.org/zap"
+	"sync"
 )
 
 // X is a instance of Logger, and it will be initialized when logx is imported.
@@ -115,28 +114,28 @@ func (l *Logger) Flush() {
 
 // Add adds a entry in current goroutine. Entry will be print when logging.
 func (l *Logger) Add(key string, value interface{}) {
-	goid := runtime.Goid()
-	actual, _ := field.LoadOrStore(goid, make([]interface{}, 0))
+	id := routine.GetId()
+	actual, _ := field.LoadOrStore(id, make([]interface{}, 0))
 	arr := append(actual.([]interface{}), key, value)
-	field.Store(goid, arr)
+	field.Store(id, arr)
 }
 
 // Clean all entries in current goroutine.
 func (l *Logger) Clean() {
-	goid := runtime.Goid()
-	field.Delete(goid)
+	id := routine.GetId()
+	field.Delete(id)
 }
 
 // With adds entries and constructs a new Logger.
 // Note that the keys in key-value pairs should be strings.
-func (l *Logger) With(keysAndValues ...interface{}) (log *Logger){
+func (l *Logger) With(keysAndValues ...interface{}) (log *Logger) {
 	log = new(Logger)
 	log.sugar = l.sugar.With(keysAndValues...)
 	return
 }
 
 // Show prints value by JSON format on stdout.
-func (l *Logger) Show(value interface{}){
+func (l *Logger) Show(value interface{}) {
 	b, _ := json.MarshalIndent(value, "", "  ")
 	msg := fmt.Sprintf("%s", string(b))
 	fmt.Println(msg)
@@ -198,7 +197,7 @@ func generate(fun func(string, ...interface{}), format interface{}, params ...in
 }
 
 func getField() []interface{} {
-	goid := goid2.GetGoid()
-	value, _ := field.LoadOrStore(goid, make([]interface{}, 0))
+	id := routine.GetId()
+	value, _ := field.LoadOrStore(id, make([]interface{}, 0))
 	return value.([]interface{})
 }

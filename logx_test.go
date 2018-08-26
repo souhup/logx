@@ -22,11 +22,11 @@ package logx
 
 import (
 	"fmt"
-	"runtime"
+	"github.com/souhup/logx/routine"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
-	"sync"
 )
 
 func BenchmarkParallelLogger_Debug(b *testing.B) {
@@ -47,7 +47,7 @@ func TestPerformance(t *testing.T) {
 	for i := 0; i < 100000; i++ {
 		go func() {
 			for {
-				X.Add("goid", runtime.Goid())
+				X.Add("goid", routine.GetId())
 				X.Info(0)
 				X.Clean()
 				atomic.AddInt64(&ops, 1)
