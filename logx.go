@@ -35,7 +35,7 @@ func init() {
 		MessageKey: "msg",
 		LevelKey:   "level",
 		TimeKey:    "time",
-		Encoding:   "simple",
+		Encoding:   "console",
 		CallerKey:  "caller",
 		Level:      -1,
 	}

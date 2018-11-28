@@ -21,13 +21,13 @@
 package logx
 
 import (
+	"errors"
 	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 	"time"
-	"errors"
 )
 
 // GetLoggerByConf constructs a new Logger by Config.
@@ -50,8 +50,6 @@ func GetLoggerByConf(config *Config) (logger *Logger, err error) {
 		encoder = zapcore.NewJSONEncoder(proConf)
 	} else if config.Encoding == "console" {
 		encoder = zapcore.NewConsoleEncoder(proConf)
-	} else if config.Encoding == "simple" {
-		encoder = zapcore.NewSimpleEncoder(proConf)
 	} else {
 		err = errors.New("encoding must be one of the json, console or simple")
 		fmt.Fprintln(os.Stderr, err.Error())
