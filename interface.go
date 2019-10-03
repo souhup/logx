@@ -21,18 +21,9 @@
 package logx
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/souhup/logx/routine"
+	"context"
 	"go.uber.org/zap"
-	"sync"
 )
-
-// X is a instance of Logger, and it will be initialized when logx is imported.
-var X *Logger
-
-// field store every entries in different goroutines.
-var field sync.Map
 
 // Config is struct about configuration file.
 type Config struct {
@@ -85,119 +76,47 @@ type Config struct {
 
 // Log is a logger interface. It contains all API about logx.
 type Log interface {
-	Flush()
-	Clean()
 	Show(interface{})
+
+	Flush()
 	With(...interface{}) *Logger
-	Add(string, interface{})
-	Debug(interface{})
+	Withf(string, string, ...interface{}) *Logger
+	Withc(context.Context, ...interface{}) context.Context
+	Withcf(context.Context, string, string, ...interface{}) context.Context
+
+	Debug(...interface{})
 	Debugf(string, ...interface{})
-	Info(interface{})
+	Debugc(context.Context, ...interface{})
+	Debugcf(context.Context, string, ...interface{})
+
+	Info(...interface{})
 	Infof(string, ...interface{})
-	Warn(interface{})
+	Infoc(context.Context, ...interface{})
+	Infocf(context.Context, string, ...interface{})
+
+	Warn(...interface{})
 	Warnf(string, ...interface{})
-	Error(interface{})
+	Warnc(context.Context, ...interface{})
+	Warncf(context.Context, string, ...interface{})
+
+	Error(...interface{})
 	Errorf(string, ...interface{})
+	Errorc(context.Context, ...interface{})
+	Errorcf(context.Context, string, ...interface{})
+
+	Fatal(...interface{})
+	Fatalf(string, ...interface{})
+	Fatalc(context.Context, ...interface{})
+	Fatalcf(context.Context, string, ...interface{})
+
+	Panic(...interface{})
+	Panicf(string, ...interface{})
+	Panicc(context.Context, ...interface{})
+	Paniccf(context.Context, string, ...interface{})
 }
 
 // Logger is the implement about Log.
 type Logger struct {
 	zapLogger *zap.Logger
 	sugar     *zap.SugaredLogger
-}
-
-// Flush calls the underlying Core's Sync method, flushing any buffered log
-// entries. Applications should take care to call Sync before exiting.
-func (l *Logger) Flush() {
-	l.zapLogger.Sync()
-}
-
-// Add adds a entry in current goroutine. Entry will be print when logging.
-func (l *Logger) Add(key string, value interface{}) {
-	id := routine.GetId()
-	actual, _ := field.LoadOrStore(id, make([]interface{}, 0))
-	arr := append(actual.([]interface{}), key, value)
-	field.Store(id, arr)
-}
-
-// Clean all entries in current goroutine.
-func (l *Logger) Clean() {
-	id := routine.GetId()
-	field.Delete(id)
-}
-
-// With adds entries and constructs a new Logger.
-// Note that the keys in key-value pairs should be strings.
-func (l *Logger) With(keysAndValues ...interface{}) (log *Logger) {
-	log = new(Logger)
-	log.sugar = l.sugar.With(keysAndValues...)
-	return
-}
-
-// Show prints value by JSON format on stdout.
-func (l *Logger) Show(value interface{}) {
-	b, _ := json.MarshalIndent(value, "", "  ")
-	msg := fmt.Sprintf("%s", string(b))
-	fmt.Println(msg)
-}
-
-// Debug uses fmt.Sprint to construct and logs a message.
-// If value is struct, it will be converted to JSON.
-func (l *Logger) Debug(v interface{}) {
-	generate(l.sugar.Debugw, v)
-}
-
-// Debugf uses fmt.Sprintf to log a templated message.
-func (l *Logger) Debugf(format string, params ...interface{}) {
-	generate(l.sugar.Debugw, format, params...)
-}
-
-// Info uses fmt.Sprint to construct and log a message.
-// If value is struct, it will be converted to JSON.
-func (l *Logger) Info(v interface{}) {
-	generate(l.sugar.Infow, v)
-}
-
-// Infof uses fmt.Sprintf to log a templated message.
-func (l *Logger) Infof(format string, params ...interface{}) {
-	generate(l.sugar.Infow, format, params...)
-}
-
-// Warn uses fmt.Sprint to construct and log a message.
-// If value is struct, it will be converted to JSON.
-func (l *Logger) Warn(v interface{}) {
-	generate(l.sugar.Warnw, v)
-}
-
-// Warnf uses fmt.Sprintf to log a templated message.
-func (l *Logger) Warnf(format string, params ...interface{}) {
-	generate(l.sugar.Warnw, format, params...)
-}
-
-// Error uses fmt.Sprint to construct and log a message.
-// If value is struct, it will be converted to JSON.
-func (l *Logger) Error(v interface{}) {
-	generate(l.sugar.Errorw, v)
-}
-
-// Errorf uses fmt.Sprintf to log a templated message.
-func (l *Logger) Errorf(format string, params ...interface{}) {
-	generate(l.sugar.Errorw, format, params...)
-}
-
-func generate(fun func(string, ...interface{}), format interface{}, params ...interface{}) {
-	var msg string
-	if len(params) > 0 {
-		msg = fmt.Sprintf(format.(string), params...)
-	} else {
-		msg = fmt.Sprintf("%+v", format)
-	}
-	fun(msg, getField()...)
-	return
-}
-
-func getField() []interface{} {
-	id := routine.GetId()
-	value, _ := field.LoadOrStore(id, make([]interface{}, 0))
-	return value.([]interface{})
 }

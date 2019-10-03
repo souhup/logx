@@ -71,7 +71,7 @@ func GetLoggerByConf(config *Config) (logger *Logger, err error) {
 
 	newCore := zapcore.NewCore(encoder, output, zap.NewAtomicLevelAt(zapcore.Level(config.Level)))
 	opts := []zap.Option{zap.ErrorOutput(zapWriter)}
-	opts = append(opts, zap.AddCaller(), zap.AddCallerSkip(3))
+	opts = append(opts, zap.AddCaller(), zap.AddCallerSkip(2))
 
 	logger = new(Logger)
 	logger.zapLogger = zap.New(newCore, opts...)

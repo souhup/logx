@@ -2,7 +2,7 @@
 # -1 is debug level,
 # 0 is info level,
 # 1 is warn level,
-# is error level
+# 2 is error level
 level: -1
 
 # keys used for each log entry. If any key is empty, that portion
@@ -13,7 +13,7 @@ time_key: time
 caller_key: caller
 
 # encoding of log, just is json or console
-encoding: console
+encoding: json
 # Filename is the file to write logs to.  Backup log files will be retained
 # in the same directory.
 file_name: logs/test.log

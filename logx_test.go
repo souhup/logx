@@ -21,161 +21,110 @@
 package logx
 
 import (
-	"fmt"
-	"github.com/souhup/logx/routine"
-	"sync"
-	"sync/atomic"
+	"context"
+	. "gopkg.in/check.v1"
+	"reflect"
+	"runtime"
 	"testing"
-	"time"
 )
 
-func BenchmarkParallelLogger_Debug(b *testing.B) {
-	return
-	b.StartTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			X.Debug(1)
-		}
-	})
-	b.StopTimer()
+type MySuite struct {
 }
 
-func TestPerformance(t *testing.T) {
-	fmt.Println("test performance")
-	Init("./config/logs.yml")
-	var ops int64 = 0
-	for i := 0; i < 100000; i++ {
-		go func() {
-			for {
-				X.Add("goid", routine.GetId())
-				X.Info(0)
-				X.Clean()
-				atomic.AddInt64(&ops, 1)
-			}
-		}()
-	}
-	fmt.Println("create goroutine done.")
-	time.Sleep(1 * time.Second)
-	score := atomic.LoadInt64(&ops)
-	fmt.Printf("number of execution in 1s: %d\n", score)
-	return
+var _ = Suite(&MySuite{})
+
+func Test(t *testing.T) { TestingT(t) }
+
+func (it *MySuite) SetUpSuite(c *C) {
 }
 
-func TestInit(t *testing.T) {
-	// test error
-	Init("./config/err_test.yml")
-	// test error
-	Init("./foo/bar")
-
-	Init("./config/logs.yml")
-	X.Debug("test Init")
+func (it *MySuite) TearDownSuite(c *C) {
 }
 
-func TestGetLogger(t *testing.T) {
+func (it *MySuite) SetUpTest(c *C) {
+}
+
+func (it *MySuite) TearDownTest(c *C) {
+}
+
+func (it *MySuite) TestGetLogger(c *C) {
 	logger, err := GetLogger("./config/logs.yml")
-	if err != nil {
-		panic(err)
-	}
-	logger.Debug("test GetLogger")
+	c.Assert(err, IsNil)
+	logger.Info("test GetLogger")
 }
 
-func TestGetLoggerByConf(t *testing.T) {
+func (it *MySuite) TestGetLoggerByConf(c *C) {
 	conf := Config{
 		MessageKey: "msg",
 		LevelKey:   "level",
 		TimeKey:    "time",
-		Encoding:   "console",
+		Encoding:   "json",
 		CallerKey:  "caller",
 		Level:      -1,
 	}
 	logger, err := GetLoggerByConf(&conf)
-	if err != nil {
-		t.Fatal(err)
-	}
-	logger.Debug("test GetLogger")
-
-	// test error
-	conf.Encoding = "foo"
-	_, err = GetLoggerByConf(&conf)
-	if err != nil {
-		logger.Debug("test GetLogger")
-	}
+	c.Assert(err, IsNil)
+	logger.Info("test GetLogger")
 }
 
-func TestLogger_Show(t *testing.T) {
-	type Book struct {
-		ID   int
-		Name string
-	}
-	book := &Book{
-		ID:   1,
-		Name: "test Show",
-	}
-	X.Show(book)
+func (it *MySuite) TestWith(c *C) {
+	X.With("a", "1", "b", 2).
+		With("c", 3).
+		With("d", 5).
+		Debug("test With")
 }
 
-func TestLogger_Add(t *testing.T) {
-	group := sync.WaitGroup{}
-	group.Add(1)
-	go func() {
-		X.Add("foo1", 1)
-		X.Debug("test Add 1")
-		group.Done()
-	}()
-	group.Add(1)
-	go func() {
-		X.Add("foo2", 2)
-		X.Debug("test Add 2")
-		group.Done()
-	}()
-	group.Wait()
+func (it *MySuite) TestWithc(c *C) {
+	ctx := context.TODO()
+	ctx = X.Withc(ctx, "a", 1, "b", 2)
+	ctx = X.Withc(ctx, "c", 3)
+	X.Debugc(ctx, "test Withc")
 }
 
-func TestLogger_With(t *testing.T) {
-	X.With("foo", "bar", "foo2", 0).With("foo3", 1).Debug("test With")
-	X.Debug("test With")
+func (it *MySuite) TestWithcf(c *C) {
+	ctx := context.TODO()
+	ctx = X.Withc(ctx, "a", 1, "b", 2)
+	ctx = X.Withcf(ctx, "tag", "key%v", 13)
+	X.Debugc(ctx, "test Withcf")
 }
 
-func TestLogger_Clean(t *testing.T) {
-	X.Add("foo", "bar")
-	X.Debug("test Clean")
-	X.Clean()
-	X.Debug("test Clean")
-}
-
-func TestLogger_Flush(t *testing.T) {
+func (it *MySuite) TestFlush(c *C) {
 	defer X.Flush()
 	X.Debug("test Flush")
 }
 
-func TestLogger_Debug(t *testing.T) {
-	X.Debug("test Debug")
+func (it *MySuite) TestPrint(c *C) {
+	funArr := []func(...interface{}){X.Debug, X.Info, X.Warn, X.Error}
+	for _, fun := range funArr {
+		fun("testing", getFunctionName(fun))
+	}
 }
 
-func TestLogger_Debugf(t *testing.T) {
-	X.Debugf("test %s", "Debugf")
+func (it *MySuite) TestPrintf(c *C) {
+	funArr := []func(string, ...interface{}){X.Debugf, X.Infof, X.Warnf, X.Errorf}
+	for _, fun := range funArr {
+		fun("testing %v", getFunctionName(fun))
+	}
 }
 
-func TestLogger_Info(t *testing.T) {
-	X.Info("test Info")
+func (it *MySuite) TestPrintc(c *C) {
+	ctx := X.Withc(nil, "a", 1, "b", 2)
+	ctx = X.Withc(ctx, "c", 3)
+	funArr := []func(context.Context, ...interface{}){X.Debugc, X.Infoc, X.Warnc, X.Errorc}
+	for _, fun := range funArr {
+		fun(ctx, "testing", getFunctionName(fun))
+	}
 }
 
-func TestLogger_Infof(t *testing.T) {
-	X.Infof("test %s", "Infof")
+func (it *MySuite) TestPrintcf(c *C) {
+	ctx := X.Withc(nil, "a", 1, "b", 2)
+	ctx = X.Withc(ctx, "c", 3)
+	funArr := []func(context.Context, string, ...interface{}){X.Debugcf, X.Infocf, X.Warncf, X.Errorcf}
+	for _, fun := range funArr {
+		fun(ctx, "testing %v", getFunctionName(fun))
+	}
 }
 
-func TestLogger_Warn(t *testing.T) {
-	X.Warn("test Warn")
-}
-
-func TestLogger_Warnf(t *testing.T) {
-	X.Warnf("test %s", "Warnf")
-}
-
-func TestLogger_Error(t *testing.T) {
-	X.Error("test Error")
-}
-
-func TestLogger_Errorf(t *testing.T) {
-	X.Errorf("test %s", "Errorf")
+func getFunctionName(i interface{}) string {
+	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
 }

@@ -1,10 +1,10 @@
 ## Logx
 
-powerful and simple logger for golang, and help you identify different goroutine automatically.
+powerful and simple logger for golang
 
 ## Installation
 
-`go get -u github.com/souhup/logx`
+`go get -u github.com/go/logx`
 
 ## Quick Start
 
@@ -12,59 +12,47 @@ powerful and simple logger for golang, and help you identify different goroutine
 
 You can use it directly.
 ```go
-import "github.com/souhup/logx"
+package main
+
+import "github.com/go/logx"
 
 func main() {
-	logx.X.Debug("hello")
+	logx.X.Debug("hi")
+	logx.X.Debug("hello", "world", 42)
 	logx.X.Debugf("%s", "world")
 }
 ```
-
-
 ```
-018-08-25 08:47:33	DEBUG	igo/t5.go:5	hello
-2018-08-25 08:47:33	DEBUG	igo/t5.go:6	world
+{"level":"DEBUG","time":"2019-09-21 16:47:19","caller":"test/main.go:6","msg":"hi"}
+{"level":"DEBUG","time":"2019-09-21 16:47:19","caller":"test/main.go:7","msg":"hello world 42"}
+{"level":"DEBUG","time":"2019-09-21 16:47:19","caller":"test/main.go:8","msg":"world"}
 ```
 
 Key-value pairs is Ok.
-
-Note that the default mode is **simple**, it will ignore the keys. if you want 
-show them, you can use **console** or **json** in configuration file.
-
 ```go
 func main() {
-	logx.X.With("Method", "Get", "DeviceID", "aptx4896").Debug("authenticate")
+	logxX.With("a", "1", "b", 2).
+		With("c", 3).
+		With("d", 5).
+		Debug("test With")
 }
 ```
 
 ```
-2018-08-25 08:48:40	DEBUG	Get	aptx4896	igo/t5.go:5	authenticate
+{"level":"DEBUG","time":"2019-09-21 16:49:11","caller":"test/main.go:9","msg":"test With","a":"1","b":2,"c":3,"d":5}
 ```
 
-More useful function is that, it can cache entry in every Goroutine.
-
+More useful function is that, it can store entry in context 
 ```go
 func main() {
-	rand.Seed(time.Now().UnixNano())
-	go business()
-	go business()
-	time.Sleep(time.Second)
-}
-
-func business() {
-	// clean goroutine cache when you destroy a goroutine.
-	defer logx.X.Clean()
-	logx.X.Add("trace_id", rand.Int())
-	logx.X.Debug("authenticate")
-	logx.X.Debug("done")
+	ctx := logx.X.Withc(nil, "a", 1, "b", 2)
+	ctx = logx.X.Withc(ctx, "c", 3)
+	logx.X.Debugc(ctx, "test Withc")
 }
 ```
 
 ```
-2018-08-25 09:22:16	DEBUG	1043844348288062735	igo/t5.go:20	authenticate
-2018-08-25 09:22:16	DEBUG	1043844348288062735	igo/t5.go:21	done
-2018-08-25 09:22:16	DEBUG	3733733451024920812	igo/t5.go:20	authenticate
-2018-08-25 09:22:16	DEBUG	3733733451024920812	igo/t5.go:21	done
+{"level":"DEBUG","time":"2019-09-21 16:51:17","caller":"test/main.go:10","msg":"test Withc","a":1,"b":2,"c":3}
 ```
 
 ### Init
@@ -121,6 +109,3 @@ local_time: true
 # using gzip.
 compress: false
 ```
-
-
-
